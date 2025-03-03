@@ -5,7 +5,7 @@ from fastapi import FastAPI
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 from langchain_groq import ChatGroq
-
+from fastapi.middleware.cors import CORSMiddleware
 
 load_dotenv()
 
@@ -33,6 +33,13 @@ chain = prompt|model|parser
 
 app = FastAPI()
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=['*'],
+    allow_credentials=True,
+    allow_methods=['*'],
+    allow_headers=['*'],
+)
 
 @app.post('/response')
 async def get_response(question:str):
