@@ -1,13 +1,11 @@
 import os
 from dotenv import load_dotenv
-from fastapi import FastAPI, Request
+from fastapi import FastAPI
 
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 from langchain_groq import ChatGroq
 
-from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse
 
 load_dotenv()
 
@@ -19,7 +17,7 @@ model = ChatGroq(model="Gemma2-9b-It", groq_api_key=groq_api_key)
 # Prompt For the model
 prompt = ChatPromptTemplate.from_messages(
     [
-        ("system", "you are a helpfull assistant you are good at history you will get asked about history questions try to answer user questios in detail and accuratly, finally i want you to answer in arabic"),
+        ("system", "You are a helpful assistant specializing in history. You will be asked history-related questions, and you should answer them in detail and accurately. Finally, respond in Arabic."),
         ("user", "{text}")
     ]
 )
@@ -34,24 +32,10 @@ chain = prompt|model|parser
 #print(response)
 
 app = FastAPI()
-# Get the absolute path of the "static" directory
-static_dir = os.path.join(os.path.dirname(__file__), "static")
-
-# Ensure the static directory exists
-if not os.path.exists(static_dir):
-    os.makedirs(static_dir)  # Create the folder if it doesn’t exist
-# Mount a folder to serve static files (HTML, CSS, JS)
-app.mount("/static", StaticFiles(directory="static"), name="static")
-
-# Serve the HTML page at the root URL
-@app.get("/")
-def read_root():
-    return FileResponse("static/index.html")
 
 
 @app.post('/response')
-async def get_response(request: Request):
-    data = await request.json()  # Get JSON data from the request
-    question = data.get("question")  # Extract 'question' from JSON
+async def get_response(question:str):
+    
     response = chain.invoke({'text': question})
     return {"answer": response}
