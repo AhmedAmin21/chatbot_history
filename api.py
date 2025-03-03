@@ -6,6 +6,7 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 from langchain_groq import ChatGroq
 from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
 
 load_dotenv()
 
@@ -17,7 +18,7 @@ model = ChatGroq(model="Gemma2-9b-It", groq_api_key=groq_api_key)
 # Prompt For the model
 prompt = ChatPromptTemplate.from_messages(
     [
-        ("system", "You are a helpful assistant specializing in history. You will be asked history-related questions, and you should answer them in detail and accurately. Finally, respond in Arabic."),
+        ("system", "You are a helpful assistant specializing in history. You will be asked history-related questions, and you should answer them in detail and accurately. Finally, respond just in Arabic."),
         ("user", "{text}")
     ]
 )
@@ -40,9 +41,11 @@ app.add_middleware(
     allow_methods=['*'],
     allow_headers=['*'],
 )
+# Define request model
+class QuestionRequest(BaseModel):
+    question: str
 
-@app.post('/response')
-async def get_response(question:str):
-    
-    response = chain.invoke({'text': question})
+@app.post("/response")
+async def get_response(request: QuestionRequest):
+    response = chain.invoke({'text': request.question})
     return {"answer": response}
